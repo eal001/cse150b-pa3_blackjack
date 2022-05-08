@@ -66,7 +66,15 @@ class Agent:
     #Hint: You can keep track the reward of states with this function as well, e.g., as one of the return values
     #Hint: After this function, you can also define another function that simulates one full trajectory, but it's optional
     def make_one_transition(self, action):
-        pass
+        if(self.simulator.state == (0,0,0) or self.simulator.state == (1,0,0)):
+            return None
+        
+        if(action == 0):
+            self.simulator.act_hit()
+        else:
+            self.simulator.act_stand()
+
+        return self.simulator.state
 
     #TODO: Implement MC policy evaluation
     def MC_run(self, num_simulation, tester=False):
