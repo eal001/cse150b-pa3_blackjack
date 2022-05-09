@@ -112,29 +112,18 @@ class Agent:
             
             # get the reward-to-go's summed up in the global variables
             for i, state in enumerate(state_sequence):
-                self.S_MC[state] += self.reward_to_go(state_sequence, i)
+                print(state)
+                self.S_MC[state] += (DISCOUNT**i)*self.simulator.check_reward() # self.reward_to_go(state_sequence, i)
                 self.N_MC[state] += 1
 
         # update values out here to avoid redundant calculation
         for state in self.N_MC.keys():
             
             if(self.N_MC[state] != 0):
-                print(self.S_MC[state])
-                print(self.N_MC[state])
+                # print(self.S_MC[state])
+                # print(self.N_MC[state])
                 self.MC_values[state] = self.S_MC[state] / self.N_MC[state]
-                print(self.MC_values[state])
-    
-
-    
-    def reward_to_go(self, state_sequence, index):
-        length = len( state_sequence )
-        reward = 0        
-        count = 0
-        for i in range(index,length):
-            self.simulator.state = state_sequence[i]
-            reward += (DISCOUNT**count)*self.simulator.check_reward() #how to evaluate the 'reward' of any given state
-            count+=1
-        return reward
+                # print(self.MC_values[state])
 
     
     #TODO: Implement TD policy evaluation
