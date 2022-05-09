@@ -1,6 +1,7 @@
 # i am going to implement this
 
 import copy
+from email.policy import default
 import random
 
 from game import Game, states
@@ -94,6 +95,47 @@ class Agent:
             # Hint: Go through game.py file and figure out which functions will be useful
             # Make sure to update self.MC_values, self.S_MC, self.N_MC for the autograder
             # Don't forget the DISCOUNT
+            
+            state_sequence = []
+            # self.simulator.init_cards() # we dont need to init bc reset alread re-initializes for us
+
+            # add initial state to state sequence
+            state_sequence.append(self.simulator.state)
+            # get the state sequence
+            while not self.simulator.game_over() :
+                # transition to each state 
+                self.make_one_transition(self.default_policy(self.simulator.state))
+                # keep track of each state and the corresponding reward*
+                state_sequence.append( self.simulator.state )
+
+            
+            
+            # get the reward-to-go's summed up in the global variables
+            for i, state in enumerate(state_sequence):
+                self.S_MC[state] += self.reward_to_go(state_sequence, i)
+                self.N_MC[state] += 1
+
+        # update values out here to avoid redundant calculation
+        for state in self.N_MC.keys():
+            
+            if(self.N_MC[state] != 0):
+                print(self.S_MC[state])
+                print(self.N_MC[state])
+                self.MC_values[state] = self.S_MC[state] / self.N_MC[state]
+                print(self.MC_values[state])
+    
+
+    
+    def reward_to_go(self, state_sequence, index):
+        length = len( state_sequence )
+        reward = 0        
+        count = 0
+        for i in range(index,length):
+            self.simulator.state = state_sequence[i]
+            reward += (DISCOUNT**count)*self.simulator.check_reward() #how to evaluate the 'reward' of any given state
+            count+=1
+        return reward
+
     
     #TODO: Implement TD policy evaluation
     def TD_run(self, num_simulation, tester=False):
