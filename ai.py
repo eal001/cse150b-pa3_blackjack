@@ -9,6 +9,7 @@ from game import Game, states
 HIT = 0
 STAND = 1
 DISCOUNT = 0.95 #This is the gamma value for all value calculations
+EPSILON = 0.4
 
 class Agent:
     def __init__(self):
@@ -164,10 +165,15 @@ class Agent:
             # evaluate the final state
             current_state = next_state
             next_state = None
+
+            if(current_state == None): continue
+
             self.TD_values[current_state] = self.TD_values[current_state] + self.alpha(self.N_TD[current_state])*(
                 # the minor update value that we will update with for each new sample
                 self.simulator.check_reward() - self.TD_values[current_state]
             )
+            self.N_TD[current_state] += 1
+
                 
     #TODO: Implement Q-learning
     def Q_run(self, num_simulation, tester=False, epsilon=0.4):
@@ -191,10 +197,44 @@ class Agent:
             # Make sure to update self.Q_values, self.N_Q for the autograder
             # Don't forget the DISCOUNT
 
+            #again does not evaluate the final state
+            state = self.simulator.state
+            while not self.simulator.game_over():        
+                
+                current_reward = self.simulator.check_reward()        
+                action = int(self.pick_action(state, epsilon))
+                next_state = self.make_one_transition(action)
+
+                next_max_Q = max(self.Q_values[next_state])
+
+                # action should be either 0/1
+                # print(self.Q_values[state][0])
+                # print(action)
+                self.Q_values[state][action] = self.Q_values[state][action] + self.alpha(self.N_Q[state][action])*(
+                    current_reward + DISCOUNT*next_max_Q - self.Q_values[state][action]
+                )
+                
+                self.N_Q[state][action] += 1
+                state = next_state
+
+            # evaluate Q value for both actions, even though no more actions are possible in the terminal state
+            state = next_state
+            current_reward = self.simulator.check_reward()  
+            self.Q_values[state][0] = self.Q_values[state][0] + self.alpha(self.N_Q[state][0])*(
+                current_reward - self.Q_values[state][0]
+            )
+            self.N_Q[state][1] += 1
+            self.Q_values[state][1] = self.Q_values[state][1] + self.alpha(self.N_Q[state][1])*(
+                current_reward - self.Q_values[state][1]
+            )
+            self.N_Q[state][1] += 1
+
     #TODO: Implement epsilon-greedy policy
     def pick_action(self, s, epsilon):
         # TODO: Replace the following random value with an action following the epsilon-greedy strategy
-        return random.randint(0, 1)
+        if random.random() < epsilon:
+            return random.randint(0, 1)
+        return max(self.Q_values[s])
 
     ####Do not modify anything below this line####
 
