@@ -112,7 +112,7 @@ class Agent:
             
             # get the reward-to-go's summed up in the global variables
             for i, state in enumerate(state_sequence):
-                print(state)
+                # print(state)
                 self.S_MC[state] += (DISCOUNT**i)*self.simulator.check_reward() # self.reward_to_go(state_sequence, i)
                 self.N_MC[state] += 1
 
@@ -146,36 +146,28 @@ class Agent:
             # Make sure to update self.TD_values and self.N_TD for the autograder
             # Don't forget the DISCOUNT
 
-            previous_state = None
             current_state = None
+            next_state = None
             while not self.simulator.game_over():
-                previous_state = self.simulator.state
-                self.make_one_transition(self.default_policy(self.simulator.state))
                 current_state = self.simulator.state
-
-            # put this for loop sequence into the while loop 
-            # update values in the sequences relative to how much they appear
-            for i, state in enumerate(state_sequence):
-                print("state: " + str(state))
-                next_value = 0
-                self.simulator.state = state
-                try:
-                    next_state = state_sequence[i+1]
-                    next_value = self.TD_values[next_state]
-                except:
-                    next_value = 0
+                current_reward = self.simulator.check_reward()
+                self.make_one_transition(self.default_policy(self.simulator.state))
+                next_state = self.simulator.state
                 
-                print("initial evaluated value for state above: " + str(self.TD_values[state]))
-                print("next value evaluated before any update: " + str(next_value))
-                print("current simulator reward: " + str(self.simulator.check_reward()))
-                print("current simulator state: "  +str(self.simulator.state))
-                print("current simulator stand? : "  +str(self.simulator.stand))
-                self.TD_values[state] = self.TD_values[state] + self.alpha(self.N_TD[state])*(
-                    # the minor update for each new sample
-                    self.simulator.check_reward() + DISCOUNT*next_value - self.TD_values[state]
+                # this way we wont evaluate states for the 'win' and the 'lose' states
+                self.TD_values[current_state] = self.TD_values[current_state] + self.alpha(self.N_TD[current_state])*(
+                    current_reward + DISCOUNT*self.TD_values[next_state] - self.TD_values[current_state]
                 )
-                print("new evaluated value for state above: " + str(self.TD_values[state]))
-                self.N_TD[state] += 1
+
+                self.N_TD[current_state] += 1
+
+            # evaluate the final state
+            current_state = next_state
+            next_state = None
+            self.TD_values[current_state] = self.TD_values[current_state] + self.alpha(self.N_TD[current_state])*(
+                # the minor update value that we will update with for each new sample
+                self.simulator.check_reward() - self.TD_values[current_state]
+            )
                 
     #TODO: Implement Q-learning
     def Q_run(self, num_simulation, tester=False, epsilon=0.4):
