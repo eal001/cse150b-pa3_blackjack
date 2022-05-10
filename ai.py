@@ -223,7 +223,7 @@ class Agent:
             self.Q_values[state][0] = self.Q_values[state][0] + self.alpha(self.N_Q[state][0])*(
                 current_reward - self.Q_values[state][0]
             )
-            self.N_Q[state][1] += 1
+            self.N_Q[state][0] += 1
             self.Q_values[state][1] = self.Q_values[state][1] + self.alpha(self.N_Q[state][1])*(
                 current_reward - self.Q_values[state][1]
             )
